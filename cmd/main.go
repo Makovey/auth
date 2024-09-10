@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	m "github.com/Makovey/microservice_auth/pkg/user/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+
+	m "github.com/Makovey/microservice_auth/pkg/user/v1"
 )
 
 const grpcPort = 3000
