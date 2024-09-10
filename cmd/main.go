@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	m "github.com/Makovey/microservice_auth/pkg/user/v1"
 )
@@ -17,7 +18,7 @@ type server struct {
 	m.UnimplementedUserV1Server
 }
 
-func (s *server) Create(ctx context.Context, in *m.User) (*m.CreateResponse, error) {
+func (s *server) Create(_ context.Context, _ *m.User) (*m.CreateResponse, error) {
 	return &m.CreateResponse{Id: 1}, nil
 }
 

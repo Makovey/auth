@@ -10,7 +10,7 @@ get-deps:
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 lint:
-	GOBIN=$(LOCAL_BIN) golangci-lint run ./... --config .golangci.pipeline.yaml
+	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.pipeline.yaml
 
 generate:
 	make generate-user-api
