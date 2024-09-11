@@ -19,7 +19,7 @@ type server struct {
 }
 
 func (s *server) Create(_ context.Context, _ *m.User) (*m.CreateResponse, error) {
-	return &m.CreateResponse{Id: 1}, nil
+	return &m.CreateResponse{Id: 1000}, nil
 }
 
 func main() {
