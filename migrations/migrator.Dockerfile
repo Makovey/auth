@@ -11,7 +11,7 @@ ADD https://github.com/pressly/goose/releases/download/v3.14.0/goose_linux_x86_6
 
 RUN chmod +x /bin/goose
 
-WORKDIR /root
+WORKDIR /root/migrations_auth
 
 ADD migrations/statements/*.sql migrations/
 ADD migrations/migration.sh .

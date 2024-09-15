@@ -1,7 +1,8 @@
 -- +goose Up
 CREATE TABLE auth (
     id SERIAL PRIMARY KEY,
-    title TEXT
+    title TEXT,
+    tz TEXT
 );
 
 -- +goose Down

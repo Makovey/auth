@@ -10,7 +10,7 @@ env:
   REGISTRY: "cr.selcloud.ru/makovej"
   IMAGE_NAME: "auth_server"
   CONTAINER_NAME: "auth_server_container"
-  DB_CONTAINER_NAME: "root-pg-1"
+  DB_CONTAINER_NAME: "migrations_auth-pg-1"
 
 jobs:
   build-and-test:
@@ -75,9 +75,11 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSHKEY }}
+          envs: DB_CONTAINER_NAME
           script: |
             docker stop $DB_CONTAINER_NAME
-            docker-compose up -d
+            cd migrations_auth
+            docker-compose up --build -d
 
   deploy-app:
     runs-on: ubuntu-latest
