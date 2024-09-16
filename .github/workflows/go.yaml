@@ -10,7 +10,7 @@ env:
   REGISTRY: "cr.selcloud.ru/makovej"
   IMAGE_NAME: "auth_server"
   CONTAINER_NAME: "auth_server_container"
-  DB_CONTAINER_NAME: "migrations_auth-pg-1"
+  DB_CONTAINER_NAME: "auth-pg-1"
 
 jobs:
   build-and-test:
@@ -78,7 +78,7 @@ jobs:
           envs: DB_CONTAINER_NAME
           script: |
             docker stop $DB_CONTAINER_NAME
-            cd migrations_auth
+            cd auth
             docker-compose up --build -d
 
   deploy-app:

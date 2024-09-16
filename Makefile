@@ -40,6 +40,6 @@ local-migration-down:
 	$(LOCAL_BIN)/goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
 
 copy-migrations-folder:
-	scp docker-compose.yaml root@176.114.66.95:/root/migrations_auth/
-	scp .env root@176.114.66.95:/root/migrations_auth/
-	scp -r migrations/ root@176.114.66.95:/root/migrations_auth
+	scp docker-compose.yaml root@176.114.66.95:/root/auth/
+	scp .env root@176.114.66.95:/root/auth/
+	scp -r migrations/ root@176.114.66.95:/root/auth

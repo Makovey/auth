@@ -1,5 +1,5 @@
 #!/bin/bash
-source /root/migrations_auth/.env
+source /root/auth/.env
 
 export MIGRATION_DSN="host=pg port=5432 dbname=$PG_DATABASE_NAME user=$PG_USER password=$PG_PASSWORD sslmode=disable"
 
