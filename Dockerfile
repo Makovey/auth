@@ -13,4 +13,4 @@ FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /github.com/Makovey/microservices/auth/source/bin/auth_server .
 
-CMD ["./auth_server"]
+CMD ["./auth_server", "-dbhost=176.114.66.95"]
