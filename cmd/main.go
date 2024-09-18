@@ -3,48 +3,57 @@ package main
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"log"
 	"net"
 
-	m "github.com/Makovey/microservice_auth/pkg/user/v1"
-	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+	"github.com/Makovey/microservice_auth/internal/adapter"
+	"github.com/Makovey/microservice_auth/internal/repository/user"
+	"github.com/Makovey/microservice_auth/internal/service"
+	proto "github.com/Makovey/microservice_auth/pkg/user/v1"
 )
 
 const (
-	dbDSN    = "host=localhost port=5432 dbname=postgres user=admin password=admin sslmode=disable"
+	dbDSN    = "host=176.114.66.95 port=5432 dbname=postgres user=admin password=admin sslmode=disable"
 	grpcPort = 3000
 )
 
 type server struct {
-	m.UnimplementedUserV1Server
+	proto.UnimplementedUserV1Server
+	userService service.UserService
 }
 
-func (s *server) Create(_ context.Context, _ *m.User) (*m.CreateResponse, error) {
-	return &m.CreateResponse{Id: 1000}, nil
+func (s *server) Create(ctx context.Context, req *proto.User) (*proto.CreateResponse, error) {
+	id, err := s.userService.Create(ctx, adapter.ToUserFromProto(req))
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Created user with id %d", id)
+
+	return &proto.CreateResponse{Id: id}, nil
+}
+
+func (s *server) Get(ctx context.Context, req *proto.GetRequest) (*proto.GetResponse, error) {
+	res, err := s.userService.Get(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Get user with id %d", res.ID)
+
+	return adapter.ToProtoFromUser(res), nil
 }
 
 func main() {
-	//addAndReadSqlData()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	reflection.Register(s)
-	m.RegisterUserV1Server(s, &server{})
-
-	log.Printf("server listening at %v", lis.Addr())
-
-	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-}
-
-func addAndReadSqlData() {
 	ctx := context.Background()
 
 	pool, err := pgxpool.Connect(ctx, dbDSN)
@@ -52,52 +61,21 @@ func addAndReadSqlData() {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	pool.Ping(ctx)
+	if err = pool.Ping(ctx); err != nil {
+		log.Fatalf("failed to ping database: %v", err)
+	}
 	defer pool.Close()
 
-	ib := sq.Insert("auth").
-		PlaceholderFormat(sq.Dollar).
-		Columns("title").
-		Values("Test").
-		Suffix("RETURNING id")
+	repo := user.NewRepository(pool)
+	userSrv := service.UserService(repo)
 
-	query, args, err := ib.ToSql()
-	if err != nil {
-		log.Fatalf("failed to generate query: %v", err)
-	}
+	s := grpc.NewServer()
+	reflection.Register(s)
+	proto.RegisterUserV1Server(s, &server{userService: userSrv})
 
-	var id int
-	err = pool.QueryRow(ctx, query, args...).Scan(&id)
-	if err != nil {
-		log.Fatalf("failed to execute query: %v", err)
-	}
+	log.Printf("server listening at %v", lis.Addr())
 
-	fmt.Printf("Added new id -> %d", id)
-	fmt.Println()
-
-	sb := sq.Select("id", "title").
-		PlaceholderFormat(sq.Dollar).
-		From("auth")
-
-	query, args, err = sb.ToSql()
-	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
-	}
-
-	rows, err := pool.Query(ctx, query, args...)
-	if err != nil {
-		log.Fatalf("failed to select notes: %v", err)
-	}
-
-	id = 0
-	var title string
-
-	for rows.Next() {
-		err = rows.Scan(&id, &title)
-		if err != nil {
-			log.Fatalf("failed to scan row: %v", err)
-		}
-
-		log.Printf("id -> %d, title -> %s", id, title)
+	if err = s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }

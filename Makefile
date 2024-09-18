@@ -27,7 +27,7 @@ generate-user-api:
 	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	api/user/v1/user.proto
 
-LOCAL_MIGRATION_DIR=$(MIGRATION_DIR)
+LOCAL_MIGRATION_DIR=./migrations/statements
 LOCAL_MIGRATION_DSN="host=localhost port=$(PG_PORT) dbname=$(PG_DATABASE_NAME) user=$(PG_USER) password=$(PG_PASSWORD) sslmode=disable"
 
 local-migration-status:

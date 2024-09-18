@@ -47,6 +47,7 @@ issues:
     - \.pb\.gw\.go$
   exclude:
     - G104
-    - exported func .* returns unexported type .*, which can be annoying to use
+    - exported .* .* should have comment or be unexported
+    - exported .* .* should have comment (or a comment on this block) or be unexported
     - should have a package comment
     - don't use an underscore in package name
