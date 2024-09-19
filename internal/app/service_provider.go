@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-
 	"github.com/Makovey/microservice_auth/internal/api/user"
+	"github.com/Makovey/microservice_auth/internal/client/db"
+	"github.com/Makovey/microservice_auth/internal/client/db/pg"
 	"github.com/Makovey/microservice_auth/internal/closer"
 	"github.com/Makovey/microservice_auth/internal/config"
 	"github.com/Makovey/microservice_auth/internal/repository"
@@ -19,8 +19,8 @@ type serviceProvider struct {
 	pgConfig   config.PGConfig
 	grpcConfig config.GRPCConfig
 
-	pgPool   *pgxpool.Pool
-	userRepo repository.UserRepository
+	dbcClient db.Client
+	userRepo  repository.UserRepository
 
 	userSrv service.UserService
 
@@ -57,31 +57,28 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
-func (s *serviceProvider) PGPool(ctx context.Context) *pgxpool.Pool {
-	if s.pgPool == nil {
-		pool, err := pgxpool.Connect(ctx, s.PGConfig().DSN())
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
+	if s.dbcClient == nil {
+		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
 			log.Fatalf("failed to connect to database: %v", err)
 		}
 
-		if err = pool.Ping(ctx); err != nil {
+		if err = cl.DB().Ping(ctx); err != nil {
 			log.Fatalf("failed to ping database: %v", err)
 		}
 
-		closer.Add(func() error {
-			pool.Close()
-			return nil
-		})
+		closer.Add(cl.Close)
 
-		s.pgPool = pool
+		s.dbcClient = cl
 	}
 
-	return s.pgPool
+	return s.dbcClient
 }
 
 func (s *serviceProvider) UserRepo(ctx context.Context) repository.UserRepository {
 	if s.userRepo == nil {
-		s.userRepo = userRepo.NewRepository(s.PGPool(ctx))
+		s.userRepo = userRepo.NewRepository(s.DBClient(ctx))
 	}
 
 	return s.userRepo

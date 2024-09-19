@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/Makovey/microservice_auth/internal/adapter"
-	"github.com/Makovey/microservice_auth/internal/repository"
-	"github.com/jackc/pgx/v4/pgxpool"
-
+	"github.com/Makovey/microservice_auth/internal/client/db"
 	"github.com/Makovey/microservice_auth/internal/model"
+	"github.com/Makovey/microservice_auth/internal/repository"
 	modelRepo "github.com/Makovey/microservice_auth/internal/repository/model"
 	sq "github.com/Masterminds/squirrel"
 )
@@ -28,10 +27,10 @@ const (
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(db *pgxpool.Pool) repository.UserRepository {
+func NewRepository(db db.Client) repository.UserRepository {
 	return &repo{db: db}
 }
 
@@ -47,8 +46,13 @@ func (r *repo) Create(ctx context.Context, user *model.User) (int64, error) {
 		log.Fatalf("failed to generate query: %v", err)
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Create",
+		QueryRaw: query,
+	}
+
 	var id int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&id)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		log.Fatalf("failed to execute query: %v", err)
 	}
@@ -70,8 +74,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		log.Fatalf("failed to build query: %v", err)
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Get",
+		QueryRaw: query,
+	}
+
 	var user modelRepo.RepoUser
-	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
 		log.Fatalf("failed to select user: %v", err)
 	}
